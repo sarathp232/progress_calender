@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin: 20px auto;
+            width: 70%;
+        }
+        .date {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            text-align: center;
+            cursor: pointer;
+        }
+        .date.past {
+            background-color: red;
+            color: white;
+        }
+        .date.selected {
+            background-color: green;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Year Calendar</h1>
+    <div id="calendar" class="calendar"></div>
+
+    <script>
+        const today = new Date();
+        const year = today.getFullYear();
+        const calendarDiv = document.getElementById('calendar');
+
+        // Create the calendar for the current year
+        function createCalendar(year) {
+            const firstDayOfYear = new Date(year, 0, 1);
+            const lastDayOfYear = new Date(year, 11, 31);
+            const daysInYear = Math.floor((lastDayOfYear - firstDayOfYear) / (1000 * 60 * 60 * 24)) + 1;
+
+            for (let i = 0; i < daysInYear; i++) {
+                const date = new Date(year, 0, 1 + i);
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'date';
+                dateDiv.textContent = date.toDateString();
+
+                // Check if the date is in the past
+                if (date < today) {
+                    dateDiv.classList.add('past');
+                }
+
+                // Add click event for marking the date green
+                dateDiv.addEventListener('click', () => {
+                    if (!dateDiv.classList.contains('past')) {
+                        dateDiv.classList.toggle('selected');
+                    }
+                });
+
+                calendarDiv.appendChild(dateDiv);
+            }
+        }
+
+        // Automatically update the calendar as days pass
+        function updateCalendar() {
+            const dates = document.querySelectorAll('.date');
+            dates.forEach(dateDiv => {
+                const date = new Date(dateDiv.textContent);
+                if (date < new Date() && !dateDiv.classList.contains('selected')) {
+                    dateDiv.classList.add('past');
+                }
+            });
+        }
+
+        // Generate the calendar and update daily
+        createCalendar(year);
+        setInterval(updateCalendar, 1000 * 60 * 60 * 24); // Update once a day
+    </script>
+</body>
+</html>
