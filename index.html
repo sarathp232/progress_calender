@@ -60,8 +60,15 @@
                     dateDiv.classList.add('past');
                 }
 
-                // Add click event for marking the date green
+                // Add click or touch event for marking the date green
                 dateDiv.addEventListener('click', () => {
+                    if (!dateDiv.classList.contains('past')) {
+                        dateDiv.classList.toggle('selected');
+                    }
+                });
+
+                // Optional: Add touch support
+                dateDiv.addEventListener('touchstart', () => {
                     if (!dateDiv.classList.contains('past')) {
                         dateDiv.classList.toggle('selected');
                     }
