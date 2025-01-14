@@ -3,175 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Year Calendar</title>
+    <title>Interactive Calendar</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
         }
         .calendar {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .month {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .days-of-week {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            margin: 20px auto;
-            width: 70%;
-        }
-        .date {
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f0f0f0;
             text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .day {
+            display: grid;
+            align-items: center;
+            padding: 15px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
-        .date.past {
-            background-color: red;
-            color: white;
-        }
-        .date.selected {
+        .day.selected {
             background-color: green;
             color: white;
         }
-        .message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.7);
+        .day.past {
+            background-color: red;
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
+        }
+        .day:hover {
+            background-color: #ddd;
         }
     </style>
 </head>
 <body>
-    <h1>Interactive Year Calendar</h1>
-    <div id="calendar" class="calendar"></div>
-    <div id="message" class="message">How can you change the future?</div>
+    <div class="calendar">
+        <div class="month" id="monthName"></div>
+        <div class="days-of-week">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
+        <div class="days" id="daysContainer"></div>
+    </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js"></script>
     <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const daysContainer = document.getElementById("daysContainer");
+        const monthName = document.getElementById("monthName");
+
         const today = new Date();
-        const year = today.getFullYear();
-        const calendarDiv = document.getElementById('calendar');
-        const messageDiv = document.getElementById('message');
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
 
-        // Load previously selected dates from localStorage
-        const selectedDates = JSON.parse(localStorage.getItem('selectedDates')) || {};
-
-        // Create the calendar for the current year
-        function createCalendar(year) {
-            const firstDayOfYear = new Date(year, 0, 1);
-            const lastDayOfYear = new Date(year, 11, 31);
-            const daysInYear = Math.floor((lastDayOfYear - firstDayOfYear) / (1000 * 60 * 60 * 24)) + 1;
-
-            for (let i = 0; i < daysInYear; i++) {
-                const date = new Date(year, 0, 1 + i);
-                const dateDiv = document.createElement('div');
-                dateDiv.className = 'date';
-                dateDiv.textContent = date.toDateString();
-
-                // Check if the date is in the past
-                if (date < today) {
-                    dateDiv.classList.add('past');
-                }
-
-                // If the date was previously selected, make it green
-                if (selectedDates[date.toDateString()]) {
-                    dateDiv.classList.add('selected');
-                }
-
-                // Add click or touch event for marking the date green
-                dateDiv.addEventListener('click', () => {
-                    if (date > today) {
-                        showMessage("How can you change the future?");
-                        return;
-                    }
-
-                    if (dateDiv.classList.contains('past')) {
-                        const confirmAction = window.confirm("Are you sure you want to go green? Yes or No");
-                        if (confirmAction) {
-                            dateDiv.classList.remove('past');
-                            dateDiv.classList.add('selected');
-                            saveSelectedDate(date);
-                        } else {
-                            dateDiv.classList.add('past');
-                        }
-                    } else {
-                        dateDiv.classList.toggle('selected');
-                        if (dateDiv.classList.contains('selected')) {
-                            saveSelectedDate(date);
-                        } else {
-                            removeSelectedDate(date);
-                        }
-                    }
-                });
-
-                // Optional: Add touch support
-                dateDiv.addEventListener('touchstart', () => {
-                    if (date > today) {
-                        showMessage("How can you change the future?");
-                        return;
-                    }
-
-                    if (dateDiv.classList.contains('past')) {
-                        const confirmAction = window.confirm("Are you sure you want to go green? Yes or No");
-                        if (confirmAction) {
-                            dateDiv.classList.remove('past');
-                            dateDiv.classList.add('selected');
-                            saveSelectedDate(date);
-                        } else {
-                            dateDiv.classList.add('past');
-                        }
-                    } else {
-                        dateDiv.classList.toggle('selected');
-                        if (dateDiv.classList.contains('selected')) {
-                            saveSelectedDate(date);
-                        } else {
-                            removeSelectedDate(date);
-                        }
-                    }
-                });
-
-                calendarDiv.appendChild(dateDiv);
+        function getDaysInMonth(month, year) {
+            const date = new Date(year, month, 1);
+            const daysInMonth = [];
+            while (date.getMonth() === month) {
+                daysInMonth.push(new Date(date));
+                date.setDate(date.getDate() + 1);
             }
+            return daysInMonth;
         }
 
-        // Function to save a selected date to localStorage
-        function saveSelectedDate(date) {
-            selectedDates[date.toDateString()] = true;
-            localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
-        }
+        function loadMonth(month, year) {
+            const daysInMonth = getDaysInMonth(month, year);
+            daysContainer.innerHTML = '';
+            monthName.textContent = `${today.toLocaleString('default', { month: 'long' })} ${year}`;
+            const firstDayOfMonth = daysInMonth[0].getDay(); // Day of the week of the 1st day of the month
 
-        // Function to remove a selected date from localStorage
-        function removeSelectedDate(date) {
-            delete selectedDates[date.toDateString()];
-            localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
-        }
+            // Empty cells before the first day of the month
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyCell = document.createElement("div");
+                emptyCell.classList.add("day");
+                daysContainer.appendChild(emptyCell);
+            }
 
-        // Automatically update the calendar as days pass
-        function updateCalendar() {
-            const dates = document.querySelectorAll('.date');
-            dates.forEach(dateDiv => {
-                const date = new Date(dateDiv.textContent);
-                if (date < new Date() && !dateDiv.classList.contains('selected')) {
-                    dateDiv.classList.add('past');
+            // Add days to the calendar grid
+            daysInMonth.forEach((date) => {
+                const dayElement = document.createElement("div");
+                dayElement.classList.add("day");
+                dayElement.textContent = date.getDate();
+                dayElement.setAttribute("data-date", date.toDateString());
+
+                // Mark past days as red
+                if (date < today) {
+                    dayElement.classList.add("past");
                 }
+
+                // Mark selected days as green (if saved in Firebase)
+                const dateString = date.toDateString();
+                db.ref('selectedDates/' + dateString).once('value', function(snapshot) {
+                    if (snapshot.val() === true) {
+                        dayElement.classList.add('selected');
+                    }
+                });
+
+                dayElement.addEventListener("click", function() {
+                    if (date < today) {
+                        const userConfirmed = confirm("Are you sure you want to go green?");
+                        if (userConfirmed) {
+                            saveSelectedDate(date);
+                            dayElement.classList.add('selected');
+                        }
+                    } else {
+                        alert("How can you change the future?");
+                    }
+                });
+
+                daysContainer.appendChild(dayElement);
             });
         }
 
-        // Function to show the message for 3 seconds
-        function showMessage(message) {
-            messageDiv.textContent = message;
-            messageDiv.style.display = "block";
-            setTimeout(() => {
-                messageDiv.style.display = "none";
-            }, 3000); // Message disappears after 3 seconds
+        function saveSelectedDate(date) {
+            const dateString = date.toDateString(); 
+            db.ref('selectedDates/' + dateString).set(true);
         }
 
-        // Generate the calendar and update daily
-        createCalendar(year);
-        setInterval(updateCalendar, 1000 * 60 * 60 * 24); // Update once a day
+        window.onload = function() {
+            loadMonth(currentMonth, currentYear); // Load the current month
+        };
     </script>
 </body>
 </html>
