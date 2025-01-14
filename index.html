@@ -32,16 +32,29 @@
             background-color: green;
             color: white;
         }
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>Interactive Year Calendar</h1>
     <div id="calendar" class="calendar"></div>
+    <div id="message" class="message">How can you change the future?</div>
 
     <script>
         const today = new Date();
         const year = today.getFullYear();
         const calendarDiv = document.getElementById('calendar');
+        const messageDiv = document.getElementById('message');
 
         // Create the calendar for the current year
         function createCalendar(year) {
@@ -62,6 +75,11 @@
 
                 // Add click or touch event for marking the date green
                 dateDiv.addEventListener('click', () => {
+                    if (date > today) {
+                        showMessage("How can you change the future?");
+                        return;
+                    }
+
                     if (dateDiv.classList.contains('past')) {
                         const confirmAction = window.confirm("Are you sure you want to go green? Yes or No");
                         if (confirmAction) {
@@ -77,6 +95,11 @@
 
                 // Optional: Add touch support
                 dateDiv.addEventListener('touchstart', () => {
+                    if (date > today) {
+                        showMessage("How can you change the future?");
+                        return;
+                    }
+
                     if (dateDiv.classList.contains('past')) {
                         const confirmAction = window.confirm("Are you sure you want to go green? Yes or No");
                         if (confirmAction) {
@@ -103,6 +126,15 @@
                     dateDiv.classList.add('past');
                 }
             });
+        }
+
+        // Function to show the message for 3 seconds
+        function showMessage(message) {
+            messageDiv.textContent = message;
+            messageDiv.style.display = "block";
+            setTimeout(() => {
+                messageDiv.style.display = "none";
+            }, 3000); // Message disappears after 3 seconds
         }
 
         // Generate the calendar and update daily
