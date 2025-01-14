@@ -56,6 +56,9 @@
         const calendarDiv = document.getElementById('calendar');
         const messageDiv = document.getElementById('message');
 
+        // Load previously selected dates from localStorage
+        const selectedDates = JSON.parse(localStorage.getItem('selectedDates')) || {};
+
         // Create the calendar for the current year
         function createCalendar(year) {
             const firstDayOfYear = new Date(year, 0, 1);
@@ -73,6 +76,11 @@
                     dateDiv.classList.add('past');
                 }
 
+                // If the date was previously selected, make it green
+                if (selectedDates[date.toDateString()]) {
+                    dateDiv.classList.add('selected');
+                }
+
                 // Add click or touch event for marking the date green
                 dateDiv.addEventListener('click', () => {
                     if (date > today) {
@@ -85,11 +93,17 @@
                         if (confirmAction) {
                             dateDiv.classList.remove('past');
                             dateDiv.classList.add('selected');
+                            saveSelectedDate(date);
                         } else {
                             dateDiv.classList.add('past');
                         }
                     } else {
                         dateDiv.classList.toggle('selected');
+                        if (dateDiv.classList.contains('selected')) {
+                            saveSelectedDate(date);
+                        } else {
+                            removeSelectedDate(date);
+                        }
                     }
                 });
 
@@ -105,16 +119,34 @@
                         if (confirmAction) {
                             dateDiv.classList.remove('past');
                             dateDiv.classList.add('selected');
+                            saveSelectedDate(date);
                         } else {
                             dateDiv.classList.add('past');
                         }
                     } else {
                         dateDiv.classList.toggle('selected');
+                        if (dateDiv.classList.contains('selected')) {
+                            saveSelectedDate(date);
+                        } else {
+                            removeSelectedDate(date);
+                        }
                     }
                 });
 
                 calendarDiv.appendChild(dateDiv);
             }
+        }
+
+        // Function to save a selected date to localStorage
+        function saveSelectedDate(date) {
+            selectedDates[date.toDateString()] = true;
+            localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
+        }
+
+        // Function to remove a selected date from localStorage
+        function removeSelectedDate(date) {
+            delete selectedDates[date.toDateString()];
+            localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
         }
 
         // Automatically update the calendar as days pass
