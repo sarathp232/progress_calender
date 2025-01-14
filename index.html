@@ -62,14 +62,30 @@
 
                 // Add click or touch event for marking the date green
                 dateDiv.addEventListener('click', () => {
-                    if (!dateDiv.classList.contains('past')) {
+                    if (dateDiv.classList.contains('past')) {
+                        const confirmAction = window.confirm("Are you sure you want to go green? Yes or No");
+                        if (confirmAction) {
+                            dateDiv.classList.remove('past');
+                            dateDiv.classList.add('selected');
+                        } else {
+                            dateDiv.classList.add('past');
+                        }
+                    } else {
                         dateDiv.classList.toggle('selected');
                     }
                 });
 
                 // Optional: Add touch support
                 dateDiv.addEventListener('touchstart', () => {
-                    if (!dateDiv.classList.contains('past')) {
+                    if (dateDiv.classList.contains('past')) {
+                        const confirmAction = window.confirm("Are you sure you want to go green? Yes or No");
+                        if (confirmAction) {
+                            dateDiv.classList.remove('past');
+                            dateDiv.classList.add('selected');
+                        } else {
+                            dateDiv.classList.add('past');
+                        }
+                    } else {
                         dateDiv.classList.toggle('selected');
                     }
                 });
