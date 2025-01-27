@@ -1,165 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Calendar</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
-        }
-        .calendar {
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .month {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .days-of-week {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .day {
-            display: grid;
-            align-items: center;
-            padding: 15px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .day.selected {
-            background-color: green;
-            color: white;
-        }
-        .day.past {
-            background-color: red;
-            color: white;
-        }
-        .day:hover {
-            background-color: #ddd;
-        }
-    </style>
-</head>
-<body>
-    <div class="calendar">
-        <div class="month" id="monthName"></div>
-        <div class="days-of-week">
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-        </div>
-        <div class="days" id="daysContainer"></div>
-    </div>
+const calendarDiv = document.getElementById('calendar');
+const messageDiv = document.getElementById('message');
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        // Load previously selected dates from localStorage
+        const selectedDates = JSON.parse(localStorage.getItem('selectedDates')) || {};
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+// Create the calendar for the current year
+function createCalendar(year) {
+const firstDayOfYear = new Date(year, 0, 1);
+@@ -73,6 +76,11 @@ <h1>Interactive Year Calendar</h1>
+dateDiv.classList.add('past');
+}
 
-        const daysContainer = document.getElementById("daysContainer");
-        const monthName = document.getElementById("monthName");
-
-        const today = new Date();
-        let currentMonth = today.getMonth();
-        let currentYear = today.getFullYear();
-
-        function getDaysInMonth(month, year) {
-            const date = new Date(year, month, 1);
-            const daysInMonth = [];
-            while (date.getMonth() === month) {
-                daysInMonth.push(new Date(date));
-                date.setDate(date.getDate() + 1);
-            }
-            return daysInMonth;
-        }
-
-        function loadMonth(month, year) {
-            const daysInMonth = getDaysInMonth(month, year);
-            daysContainer.innerHTML = '';
-            monthName.textContent = `${today.toLocaleString('default', { month: 'long' })} ${year}`;
-            const firstDayOfMonth = daysInMonth[0].getDay(); // Day of the week of the 1st day of the month
-
-            // Empty cells before the first day of the month
-            for (let i = 0; i < firstDayOfMonth; i++) {
-                const emptyCell = document.createElement("div");
-                emptyCell.classList.add("day");
-                daysContainer.appendChild(emptyCell);
-            }
-
-            // Add days to the calendar grid
-            daysInMonth.forEach((date) => {
-                const dayElement = document.createElement("div");
-                dayElement.classList.add("day");
-                dayElement.textContent = date.getDate();
-                dayElement.setAttribute("data-date", date.toDateString());
-
-                // Mark past days as red
-                if (date < today) {
-                    dayElement.classList.add("past");
+                // If the date was previously selected, make it green
+                if (selectedDates[date.toDateString()]) {
+                    dateDiv.classList.add('selected');
                 }
 
-                // Mark selected days as green (if saved in Firebase)
-                const dateString = date.toDateString();
-                db.ref('selectedDates/' + dateString).once('value', function(snapshot) {
-                    if (snapshot.val() === true) {
-                        dayElement.classList.add('selected');
-                    }
-                });
-
-                dayElement.addEventListener("click", function() {
-                    if (date < today) {
-                        const userConfirmed = confirm("Are you sure you want to go green?");
-                        if (userConfirmed) {
+// Add click or touch event for marking the date green
+dateDiv.addEventListener('click', () => {
+if (date > today) {
+@@ -85,11 +93,17 @@ <h1>Interactive Year Calendar</h1>
+if (confirmAction) {
+dateDiv.classList.remove('past');
+dateDiv.classList.add('selected');
                             saveSelectedDate(date);
-                            dayElement.classList.add('selected');
+} else {
+dateDiv.classList.add('past');
+}
+} else {
+dateDiv.classList.toggle('selected');
+                        if (dateDiv.classList.contains('selected')) {
+                            saveSelectedDate(date);
+                        } else {
+                            removeSelectedDate(date);
                         }
-                    } else {
-                        alert("How can you change the future?");
-                    }
-                });
+}
+});
 
-                daysContainer.appendChild(dayElement);
-            });
-        }
+@@ -105,18 +119,36 @@ <h1>Interactive Year Calendar</h1>
+if (confirmAction) {
+dateDiv.classList.remove('past');
+dateDiv.classList.add('selected');
+                            saveSelectedDate(date);
+} else {
+dateDiv.classList.add('past');
+}
+} else {
+dateDiv.classList.toggle('selected');
+                        if (dateDiv.classList.contains('selected')) {
+                            saveSelectedDate(date);
+                        } else {
+                            removeSelectedDate(date);
+                        }
+}
+});
 
+calendarDiv.appendChild(dateDiv);
+}
+}
+
+        // Function to save a selected date to localStorage
         function saveSelectedDate(date) {
-            const dateString = date.toDateString(); 
-            db.ref('selectedDates/' + dateString).set(true);
+            selectedDates[date.toDateString()] = true;
+            localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
         }
 
-        window.onload = function() {
-            loadMonth(currentMonth, currentYear); // Load the current month
-        };
-    </script>
-</body>
-</html>
+        // Function to remove a selected date from localStorage
+        function removeSelectedDate(date) {
+            delete selectedDates[date.toDateString()];
+            localStorage.setItem('selectedDates', JSON.stringify(selectedDates));
+        }
+
+// Automatically update the calendar as days pass
+function updateCalendar() {
+const dates = document.querySelectorAll('.date');
